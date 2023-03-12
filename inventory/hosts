@@ -1,0 +1,10 @@
+[all]
+
+[all:vars]
+
+#Localhost
+[local]
+localhost              ansible_connection=local
+
+[test]
+test-box ansible_ssh_host=192.168.1.1 hostname=test-box

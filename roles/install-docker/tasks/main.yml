@@ -1,0 +1,33 @@
+- name: Install aptitude and dependencies
+  ansible.builtin.apt:
+    name: "{{item}}"
+    state: present
+    with_items:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+
+- name: add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    state: present
+
+- name: add Docker APT repository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_lsb.codename }} stable
+    state: present
+
+- name: Install Docker CE
+  ansible.builtin.apt:
+    name: "{{item}}"
+    state: present
+    with_items:
+      - docker-ce
+
+- name: Enable Docker service
+  systemd:
+    name: docker
+    enabled: yes
+    state: started

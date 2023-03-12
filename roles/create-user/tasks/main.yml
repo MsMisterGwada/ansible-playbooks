@@ -1,0 +1,39 @@
+---
+- name: Adding new user
+  user:
+    name: "{{ user_name }}"
+    shell: /bin/bash
+    password: "{{ 'mypassword' | password_hash('sha512', 65534) }}"
+
+- name: Add user to sudoers
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^{{ user_name }}\s'
+    line: '{{ user_name }} ALL=(ALL) NOPASSWD:ALL'
+    validate: 'visudo -cf %s'
+    validate_args: '/etc/sudoers'
+
+- name: Create .ssh directory
+  file:
+    path: "{{ ssh_dir }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0700'
+
+- name: Add public key to authorized_keys
+  authorized_key:
+    user: "{{ user_name }}"
+    key: "{{ lookup('file', '/path/to/public/key.pub') }}"
+
+- name: Retrieve private key
+  fetch:
+    src: "{{ ssh_key_file }}"
+    dest: "{{ ssh_key_file }}"
+    flat: yes
+  delegate_to: "{{ inventory_hostname }}"
+    
+- name: Show private key
+  debug:
+    msg: "{{ lookup('file', ssh_key_file) }}"

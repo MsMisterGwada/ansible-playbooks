@@ -1,0 +1,29 @@
+---
+- name: Add ossec apt key
+  ansible.builtin.apt_key:
+    url: http://ossec.wazuh.com/repos/apt/conf/ossec-key.gpg.key 
+    state: present
+
+- name: Add ossec source to apt source list
+  ansible.builtin.apt_repository:
+    repo: deb http://ossec.wazuh.com/repos/apt/ubuntu trusty main
+    state: present
+
+- name: Install OSSEC
+  ansible.builtin.apt:
+    name: "{{item}}"
+    state: present
+    with_items:
+    - ossec-hids-agent
+
+- name: Copy ssl cert and configuration
+  ansible.builtin.template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+  with_items:
+    - { src: '{{ossec_sslcert}}', dest: /var/ossec/etc/sslmanager.cert }
+    - { src: '{{ossec_sslkey}}', dest: /var/ossec/etc/sslmanager.key }
+    - { src: ossec.j2, dest: /var/ossec/etc/ossec.conf }
+
+- name: Connect to ossec-server
+  ansible.builtin.shell: /var/ossec/bin/agent-auth -m {{ossec_server}} -p 1514
